@@ -45,11 +45,12 @@ st.markdown("""
             border-radius: 0.5rem !important;
         }
 
-        /* 🟦 BORDA SÓLIDA NAS CAIXAS DE ESTILOS (st.code) 🟦 */
+        /* 🟦 BORDA SÓLIDA 1PX AZUL NAS CAIXAS DE ESTILOS 🟦 */
         div[data-testid="stCodeBlock"] {
             border: 1px solid #3B82F6 !important;
             border-radius: 0.5rem !important;
             background-color: transparent !important;
+            margin-bottom: 0.2rem !important; /* Espaço pequeno entre as caixas */
         }
         div[data-testid="stCodeBlock"] code {
             color: #2E3132 !important; /* Mantém o texto escuro para se ler bem */
@@ -154,24 +155,24 @@ with col1:
             cores = list(st.session_state.dicionario['cores'].keys())
             fontes = list(st.session_state.dicionario['fontes'].keys())
             
-            # Adicionado o Accordion (Expander) para poupar espaço
             with st.expander("Ver lista de estilos extraídos", expanded=True):
-                # Divide os estilos detetados em 2 colunas dentro do accordion
                 col_estilos_1, col_estilos_2 = st.columns(2)
                 
                 with col_estilos_1:
                     st.markdown("**Cores**")
                     if cores:
-                        # O \n força a quebra de linha (Vertical)
-                        st.code("\n".join(cores), language=None)
+                        # Cria uma caixa separada para cada cor detetada
+                        for c in cores:
+                            st.code(c, language=None)
                     else:
                         st.caption("Nenhuma cor encontrada.")
                         
                 with col_estilos_2:
                     st.markdown("**Tipografia**")
                     if fontes:
-                        # O \n força a quebra de linha (Vertical)
-                        st.code("\n".join(fontes), language=None)
+                        # Cria uma caixa separada para cada fonte detetada
+                        for f in fontes:
+                            st.code(f, language=None)
                     else:
                         st.caption("Nenhuma fonte encontrada.")
 
