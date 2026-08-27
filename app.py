@@ -190,9 +190,6 @@ with col2:
             link_hover = st.selectbox("Cor do Hover", options=lista_cores, key="link_cor_hover")
         else:
             link_hover = st.text_input("Cor do Hover", placeholder="Nome da Cor", key="link_cor_hover")
-            
-    st.markdown("#### Custom CSS (Injetado no Contentor Principal)")
-    custom_css = st.text_area("Ex: selector a { text-decoration: underline; }", key="custom_css", height=100)
     
     st.markdown("---")
     if word_file and st.button("Gerar Código JSON", type="primary", use_container_width=True):
@@ -249,10 +246,6 @@ with col2:
                 "content_width": "full",
                 "padding": { "unit": "px", "top": "40", "right": "20", "bottom": "40", "left": "20", "isLinked": False }
             }
-            
-            # Injeta o Custom CSS se o utilizador tiver preenchido
-            if custom_css.strip():
-                container_settings["custom_css"] = custom_css.strip()
                     
             template_final = {
                 "version": "0.4", "title": "Página Dinâmica", "type": "page",
