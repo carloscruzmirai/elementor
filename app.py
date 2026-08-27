@@ -93,11 +93,11 @@ st.markdown("Transforme ficheiros Word em páginas estruturadas num clique.")
 if 'dicionario' not in st.session_state:
     st.session_state.dicionario = {"cores": {}, "fontes": {}}
 
-col1, col2 = st.columns(2)
+col1, col2 = st.columns(2, gap="large")
 
 with col1:
     st.header("⚙️ 1. Ambiente do Site")
-    st.markdown("Importe o ficheiro `site-settings.json` do cliente para detetar as cores nativas.")
+    st.markdown("Importe o ficheiro `site-settings.json` do cliente.")
     
     settings_file = st.file_uploader("Upload do site-settings.json", type=['json'])
     
@@ -109,15 +109,25 @@ with col1:
             
             st.success("Configurações lidas com sucesso!")
             
-            with st.expander("Ver Estilos Detetados neste Site"):
+            with st.expander("Ver Estilos Detetados (Passe o rato e clique para copiar)", expanded=True):
                 cores = list(st.session_state.dicionario['cores'].keys())
                 fontes = list(st.session_state.dicionario['fontes'].keys())
                 
                 st.markdown("**🎨 Cores:**")
-                st.markdown(', '.join([f"`{c}`" for c in cores]) if cores else "Nenhuma encontrada")
+                if cores:
+                    c_cols = st.columns(3)
+                    for i, c in enumerate(cores):
+                        c_cols[i % 3].code(c, language=None)
+                else:
+                    st.markdown("Nenhuma encontrada")
                 
                 st.markdown("**✍️ Fontes:**")
-                st.markdown(', '.join([f"`{f}`" for f in fontes]) if fontes else "Nenhuma encontrada")
+                if fontes:
+                    f_cols = st.columns(3)
+                    for i, f in enumerate(fontes):
+                        f_cols[i % 3].code(f, language=None)
+                else:
+                    st.markdown("Nenhuma encontrada")
         except Exception as e:
             st.error("Erro ao ler o ficheiro JSON.")
 
@@ -126,14 +136,30 @@ with col2:
     
     word_file = st.file_uploader("Upload do ficheiro Word", type=['docx'])
     
+    # Prepara as listas para os Menus Suspensos (Dropdowns)
+    lista_cores = [""] + list(st.session_state.dicionario['cores'].keys())
+    lista_fontes = [""] + list(st.session_state.dicionario['fontes'].keys())
+    
+    # Verifica se há ficheiro de settings carregado
+    tem_estilos = len(lista_cores) > 1 or len(lista_fontes) > 1
+    
     st.markdown("#### Mapeamento de Títulos")
-    titulo_cor = st.text_input("Nome da Cor (Ex: Primaria)", key="t_cor")
-    titulo_fonte = st.text_input("Nome da Fonte (Ex: Titulos)", key="t_fonte")
+    if tem_estilos:
+        titulo_cor = st.selectbox("Cor dos Títulos", options=lista_cores, key="t_cor")
+        titulo_fonte = st.selectbox("Fonte dos Títulos", options=lista_fontes, key="t_fonte")
+    else:
+        titulo_cor = st.text_input("Nome da Cor (Ex: Primaria)", key="t_cor")
+        titulo_fonte = st.text_input("Nome da Fonte (Ex: Titulos)", key="t_fonte")
     
     st.markdown("#### Mapeamento de Parágrafos")
-    texto_cor = st.text_input("Nome da Cor (Ex: Texto)", key="p_cor")
-    texto_fonte = st.text_input("Nome da Fonte (Ex: Paragrafos)", key="p_fonte")
+    if tem_estilos:
+        texto_cor = st.selectbox("Cor dos Textos", options=lista_cores, key="p_cor")
+        texto_fonte = st.selectbox("Fonte dos Textos", options=lista_fontes, key="p_fonte")
+    else:
+        texto_cor = st.text_input("Nome da Cor (Ex: Texto)", key="p_cor")
+        texto_fonte = st.text_input("Nome da Fonte (Ex: Paragrafos)", key="p_fonte")
     
+    st.markdown("---")
     if word_file and st.button("Gerar Código JSON", type="primary", use_container_width=True):
         with st.spinner("A processar ficheiro..."):
             result = mammoth.convert_to_html(word_file)
