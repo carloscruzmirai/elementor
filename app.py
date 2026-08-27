@@ -2,6 +2,7 @@ import streamlit as st
 import json
 import mammoth
 import random
+import re
 from bs4 import BeautifulSoup
 
 # ==========================================
@@ -53,8 +54,12 @@ def obter_id_estilo(tipo, nome_escrito, dicionario):
         return id_encontrado
     return prefixo + id_encontrado
 
-def criar_widget_titulo(texto, cor_nome, fonte_nome, dicionario):
-    settings = {"title": texto}
+def criar_widget_titulo(texto, tag_html, cor_nome, fonte_nome, dicionario):
+    """Cria um widget de Título (Heading) e define a tag HTML (H1, H2, etc)"""
+    settings = {
+        "title": texto,
+        "header_size": tag_html.lower()
+    }
     cor_final = obter_id_estilo('cores', cor_nome, dicionario)
     fonte_final = obter_id_estilo('fontes', fonte_nome, dicionario)
     
@@ -69,6 +74,7 @@ def criar_widget_titulo(texto, cor_nome, fonte_nome, dicionario):
     }
 
 def criar_widget_texto(html_texto, cor_nome, fonte_nome, dicionario):
+    """Cria um widget de Texto (Text Editor)"""
     settings = {"editor": html_texto}
     cor_final = obter_id_estilo('cores', cor_nome, dicionario)
     fonte_final = obter_id_estilo('fontes', fonte_nome, dicionario)
@@ -83,13 +89,22 @@ def criar_widget_texto(html_texto, cor_nome, fonte_nome, dicionario):
         "settings": settings, "elements": [], "isInner": False
     }
 
+def identificar_marcador(texto):
+    """Verifica se o texto é uma TAG de marcação."""
+    texto_limpo = texto.strip().upper()
+    match = re.match(r'^[-—]+\s*(H[1-6]|TITLE|TEXT)\s*[-—]+$', texto_limpo)
+    if match:
+        tag = match.group(1)
+        if tag == 'TITLE': return 'H1'
+        return tag
+    return None
+
 # ==========================================
 # INTERFACE STREAMLIT
 # ==========================================
 st.title("Gerador Automático Elementor 📄 -> ⚙️")
-st.markdown("Transforme ficheiros Word em páginas estruturadas num clique.")
+st.markdown("Transforme ficheiros Word em páginas estruturadas num clique, usando tags como `--- H1 ---` ou `--- TEXT ---`.")
 
-# Inicializa o dicionário na sessão
 if 'dicionario' not in st.session_state:
     st.session_state.dicionario = {"cores": {}, "fontes": {}}
 
@@ -106,7 +121,6 @@ with col1:
             settings_json = json.load(settings_file)
             st.session_state.dicionario = {"cores": {}, "fontes": {}}
             extrair_estilos_profundamente(settings_json, st.session_state.dicionario)
-            
             st.success("Configurações lidas com sucesso!")
             
             with st.expander("Ver Estilos Detetados (Passe o rato e clique para copiar)", expanded=True):
@@ -116,19 +130,17 @@ with col1:
                 st.markdown("**🎨 Cores:**")
                 if cores:
                     c_cols = st.columns(3)
-                    for i, c in enumerate(cores):
-                        c_cols[i % 3].code(c, language=None)
+                    for i, c in enumerate(cores): c_cols[i % 3].code(c, language=None)
                 else:
                     st.markdown("Nenhuma encontrada")
                 
                 st.markdown("**✍️ Fontes:**")
                 if fontes:
                     f_cols = st.columns(3)
-                    for i, f in enumerate(fontes):
-                        f_cols[i % 3].code(f, language=None)
+                    for i, f in enumerate(fontes): f_cols[i % 3].code(f, language=None)
                 else:
                     st.markdown("Nenhuma encontrada")
-        except Exception as e:
+        except Exception:
             st.error("Erro ao ler o ficheiro JSON.")
 
 with col2:
@@ -136,14 +148,11 @@ with col2:
     
     word_file = st.file_uploader("Upload do ficheiro Word", type=['docx'])
     
-    # Prepara as listas para os Menus Suspensos (Dropdowns)
     lista_cores = [""] + list(st.session_state.dicionario['cores'].keys())
     lista_fontes = [""] + list(st.session_state.dicionario['fontes'].keys())
-    
-    # Verifica se há ficheiro de settings carregado
     tem_estilos = len(lista_cores) > 1 or len(lista_fontes) > 1
     
-    st.markdown("#### Mapeamento de Títulos")
+    st.markdown("#### Estilo Padrão para Títulos (H1 a H6)")
     if tem_estilos:
         titulo_cor = st.selectbox("Cor dos Títulos", options=lista_cores, key="t_cor")
         titulo_fonte = st.selectbox("Fonte dos Títulos", options=lista_fontes, key="t_fonte")
@@ -151,7 +160,7 @@ with col2:
         titulo_cor = st.text_input("Nome da Cor (Ex: Primaria)", key="t_cor")
         titulo_fonte = st.text_input("Nome da Fonte (Ex: Titulos)", key="t_fonte")
     
-    st.markdown("#### Mapeamento de Parágrafos")
+    st.markdown("#### Estilo Padrão para Parágrafos (TEXT)")
     if tem_estilos:
         texto_cor = st.selectbox("Cor dos Textos", options=lista_cores, key="p_cor")
         texto_fonte = st.selectbox("Fonte dos Textos", options=lista_fontes, key="p_fonte")
@@ -163,23 +172,48 @@ with col2:
     if word_file and st.button("Gerar Código JSON", type="primary", use_container_width=True):
         with st.spinner("A processar ficheiro..."):
             result = mammoth.convert_to_html(word_file)
-            html_extraido = result.value
+            soup = BeautifulSoup(result.value, 'html.parser')
             
-            soup = BeautifulSoup(html_extraido, 'html.parser')
             widgets_gerados = []
+            modo_atual = 'TEXT'
+            buffer_texto = [] # Armazena parágrafos e listas consecutivas
             
-            for element in soup.find_all(['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p']):
-                if element.name.startswith('h'):
+            # Percorre os elementos de topo (tags <p>, <ul>, <ol>, etc)
+            for element in soup.find_all(recursive=False):
+                texto_puro = element.get_text(strip=True)
+                if not texto_puro:
+                    continue
+                
+                marcador = identificar_marcador(texto_puro)
+                
+                if marcador:
+                    # Se encontrou um marcador, guarda o texto que estava pendente no buffer
+                    if buffer_texto and modo_atual == 'TEXT':
+                        widgets_gerados.append(criar_widget_texto(
+                            "".join(buffer_texto), texto_cor, texto_fonte, st.session_state.dicionario
+                        ))
+                        buffer_texto = []
+                    
+                    modo_atual = marcador
+                    continue
+                
+                # Trata o conteúdo baseado no modo atual
+                if modo_atual.startswith('H'):
                     widgets_gerados.append(criar_widget_titulo(
-                        element.get_text(), titulo_cor, titulo_fonte, st.session_state.dicionario
+                        texto_puro, modo_atual, titulo_cor, titulo_fonte, st.session_state.dicionario
                     ))
-                elif element.name == 'p' and element.get_text(strip=True):
-                    widgets_gerados.append(criar_widget_texto(
-                        str(element), texto_cor, texto_fonte, st.session_state.dicionario
-                    ))
+                elif modo_atual == 'TEXT':
+                    # Acumula o HTML real (inclui <ul>, <li>, <strong>, etc)
+                    buffer_texto.append(str(element))
+            
+            # No final do documento, se sobrar texto no buffer, cria o último widget
+            if buffer_texto and modo_atual == 'TEXT':
+                widgets_gerados.append(criar_widget_texto(
+                    "".join(buffer_texto), texto_cor, texto_fonte, st.session_state.dicionario
+                ))
                     
             template_final = {
-                "version": "0.4", "title": "Página Gerada", "type": "page",
+                "version": "0.4", "title": "Página Dinâmica", "type": "page",
                 "content": [
                     {
                         "id": gerar_id(), "elType": "container",
@@ -192,11 +226,11 @@ with col2:
             
             json_string = json.dumps(template_final, indent=2)
             
-            st.success("🎉 Sucesso! O seu ficheiro Elementor está pronto.")
+            st.success("🎉 Sucesso! A sua página com formatação avançada está pronta.")
             st.download_button(
                 label="⬇️ Transferir ficheiro .json",
                 data=json_string,
-                file_name="pagina-pronta-elementor.json",
+                file_name="pagina-dinamica.json",
                 mime="application/json",
                 use_container_width=True
             )
