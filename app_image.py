@@ -31,7 +31,7 @@ st.markdown("""
             color: #3B82F6 !important;
         }
         
-        /* Estilo dos Cartões (Fundo branco para contraste) */
+        /* Estilo dos Cartões */
         div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column"] {
             background-color: #FFFFFF !important;
             border-color: #E5E7EB !important;
@@ -45,15 +45,15 @@ st.markdown("""
             border-radius: 0.5rem !important;
         }
 
-        /* 🟦 BORDA SÓLIDA 1PX AZUL NAS CAIXAS DE ESTILOS 🟦 */
+        /* 🟦 BORDA SÓLIDA NAS CAIXAS DE ESTILOS 🟦 */
         div[data-testid="stCodeBlock"] {
             border: 1px solid #3B82F6 !important;
             border-radius: 0.5rem !important;
             background-color: transparent !important;
-            margin-bottom: 0.2rem !important; /* Espaço pequeno entre as caixas */
+            margin-bottom: 0.2rem !important;
         }
         div[data-testid="stCodeBlock"] code {
-            color: #2E3132 !important; /* Mantém o texto escuro para se ler bem */
+            color: #2E3132 !important;
             font-family: 'Geist', sans-serif !important;
         }
     </style>
@@ -161,18 +161,14 @@ with col1:
                 with col_estilos_1:
                     st.markdown("**Cores**")
                     if cores:
-                        # Cria uma caixa separada para cada cor detetada
-                        for c in cores:
-                            st.code(c, language=None)
+                        for c in cores: st.code(c, language=None)
                     else:
                         st.caption("Nenhuma cor encontrada.")
                         
                 with col_estilos_2:
                     st.markdown("**Tipografia**")
                     if fontes:
-                        # Cria uma caixa separada para cada fonte detetada
-                        for f in fontes:
-                            st.code(f, language=None)
+                        for f in fontes: st.code(f, language=None)
                     else:
                         st.caption("Nenhuma fonte encontrada.")
 
@@ -225,6 +221,26 @@ with col2:
                 link_hover = st.selectbox("Cor do Hover", options=lista_cores, key="link_cor_hover")
             else:
                 link_hover = st.text_input("Cor do Hover", placeholder="Nome da Cor", key="link_cor_hover")
+
+    # NOVO CARTÃO: Configuração de Layout / Margens
+    with st.container(border=True):
+        st.subheader("Layout Settings", anchor=False)
+        
+        st.markdown("**Padding (Espaço Interior do Container)**")
+        col_p_unit, col_p_t, col_p_r, col_p_b, col_p_l = st.columns(5)
+        p_unit = col_p_unit.selectbox("Unidade", ["px", "%", "em", "rem"], key="p_unit")
+        p_top = col_p_t.text_input("Topo", value="40", key="p_top")
+        p_right = col_p_r.text_input("Direita", value="20", key="p_right")
+        p_bottom = col_p_b.text_input("Fundo", value="40", key="p_bottom")
+        p_left = col_p_l.text_input("Esquerda", value="20", key="p_left")
+        
+        st.markdown("**Margin (Espaço Exterior do Container)**")
+        col_m_unit, col_m_t, col_m_r, col_m_b, col_m_l = st.columns(5)
+        m_unit = col_m_unit.selectbox("Unidade", ["px", "%", "em", "rem"], key="m_unit")
+        m_top = col_m_t.text_input("Topo", value="0", key="m_top")
+        m_right = col_m_r.text_input("Direita", value="0", key="m_right")
+        m_bottom = col_m_b.text_input("Fundo", value="0", key="m_bottom")
+        m_left = col_m_l.text_input("Esquerda", value="0", key="m_left")
 
     if word_file and st.button("Generate JSON", type="primary", use_container_width=True):
         with st.spinner("Processing design elements..."):
@@ -281,11 +297,22 @@ with col2:
                     estilos_configurados['TEXT']['fonte'], link_cor, link_hover, st.session_state.dicionario
                 ))
             
+            # Montar as definições do container com base no que foi introduzido
+            container_settings = {
+                "content_width": "full",
+                "padding": {
+                    "unit": p_unit, "top": p_top, "right": p_right, "bottom": p_bottom, "left": p_left, "isLinked": False
+                },
+                "margin": {
+                    "unit": m_unit, "top": m_top, "right": m_right, "bottom": m_bottom, "left": m_left, "isLinked": False
+                }
+            }
+            
             template_final = {
                 "version": "0.4", "title": "Página Dinâmica", "type": "page",
                 "content": [{
                     "id": gerar_id(), "elType": "container",
-                    "settings": {"content_width": "full"},
+                    "settings": container_settings,
                     "elements": widgets_gerados, "isInner": False
                 }],
                 "page_settings": {}
