@@ -57,28 +57,41 @@ def obter_id_estilo(tipo, nome_escrito, dicionario):
     prefixo = 'globals/colors?id=' if tipo == 'cores' else 'globals/typography?id='
     return id_encontrado if prefixo in id_encontrado else prefixo + id_encontrado
 
-def criar_widget_titulo(texto_html, tag_html, cor_nome, fonte_nome, dicionario):
-    # texto_html agora recebe o interior exato do Word, mantendo <strong> e <a>
+def criar_widget_titulo(texto_html, tag_html, cor_nome, fonte_nome, cor_link, cor_hover, dicionario):
     settings = {"title": texto_html, "header_size": tag_html.lower()}
-    cor_final = obter_id_estilo('cores', cor_nome, dicionario)
-    fonte_final = obter_id_estilo('fontes', fonte_nome, dicionario)
     
-    if cor_final or fonte_final:
-        settings["__globals__"] = {}
-        if cor_final: settings["__globals__"]["title_color"] = cor_final
-        if fonte_final: settings["__globals__"]["typography_typography"] = fonte_final
+    cor_f = obter_id_estilo('cores', cor_nome, dicionario)
+    fonte_f = obter_id_estilo('fontes', fonte_nome, dicionario)
+    link_f = obter_id_estilo('cores', cor_link, dicionario)
+    hover_f = obter_id_estilo('cores', cor_hover, dicionario)
+    
+    globals_dict = {}
+    if cor_f: globals_dict["title_color"] = cor_f
+    if fonte_f: globals_dict["typography_typography"] = fonte_f
+    if link_f: globals_dict["link_color"] = link_f
+    if hover_f: globals_dict["link_hover_color"] = hover_f
+        
+    if globals_dict:
+        settings["__globals__"] = globals_dict
 
     return {"id": gerar_id(), "elType": "widget", "widgetType": "heading", "settings": settings, "elements": [], "isInner": False}
 
-def criar_widget_texto(html_texto, cor_nome, fonte_nome, dicionario):
+def criar_widget_texto(html_texto, cor_nome, fonte_nome, cor_link, cor_hover, dicionario):
     settings = {"editor": html_texto}
-    cor_final = obter_id_estilo('cores', cor_nome, dicionario)
-    fonte_final = obter_id_estilo('fontes', fonte_nome, dicionario)
     
-    if cor_final or fonte_final:
-        settings["__globals__"] = {}
-        if cor_final: settings["__globals__"]["text_color"] = cor_final
-        if fonte_final: settings["__globals__"]["typography_typography"] = fonte_final
+    cor_f = obter_id_estilo('cores', cor_nome, dicionario)
+    fonte_f = obter_id_estilo('fontes', fonte_nome, dicionario)
+    link_f = obter_id_estilo('cores', cor_link, dicionario)
+    hover_f = obter_id_estilo('cores', cor_hover, dicionario)
+    
+    globals_dict = {}
+    if cor_f: globals_dict["text_color"] = cor_f
+    if fonte_f: globals_dict["typography_typography"] = fonte_f
+    if link_f: globals_dict["link_color"] = link_f
+    if hover_f: globals_dict["link_hover_color"] = hover_f
+        
+    if globals_dict:
+        settings["__globals__"] = globals_dict
 
     return {"id": gerar_id(), "elType": "widget", "widgetType": "text-editor", "settings": settings, "elements": [], "isInner": False}
 
@@ -140,8 +153,8 @@ with col2:
     
     cab1, cab2, cab3 = st.columns([0.5, 1.5, 1.5])
     cab1.markdown("**TAG**")
-    cab2.markdown("**🎨 Cor (Dropdown ou Texto)**")
-    cab3.markdown("**✍️ Fonte (Dropdown ou Texto)**")
+    cab2.markdown("**🎨 Cor (Dropdown/Texto)**")
+    cab3.markdown("**✍️ Fonte (Dropdown/Texto)**")
     
     estilos_configurados = {}
     elementos = ["H1", "H2", "H3", "H4", "H5", "H6", "TEXT"]
@@ -163,6 +176,23 @@ with col2:
                 f = st.text_input(f"Fonte {el}", placeholder="Nome da Fonte", key=f"fonte_{el}", label_visibility="collapsed")
                 
         estilos_configurados[el] = {"cor": c, "fonte": f}
+        
+    st.markdown("#### Configuração de Links Globais (Widgets)")
+    col_link1, col_link2 = st.columns(2)
+    with col_link1:
+        if tem_estilos:
+            link_cor = st.selectbox("Cor do Link Normal", options=lista_cores, key="link_cor_normal")
+        else:
+            link_cor = st.text_input("Cor do Link Normal", placeholder="Nome da Cor", key="link_cor_normal")
+            
+    with col_link2:
+        if tem_estilos:
+            link_hover = st.selectbox("Cor do Hover", options=lista_cores, key="link_cor_hover")
+        else:
+            link_hover = st.text_input("Cor do Hover", placeholder="Nome da Cor", key="link_cor_hover")
+            
+    st.markdown("#### Custom CSS (Injetado no Contentor Principal)")
+    custom_css = st.text_area("Ex: selector a { text-decoration: underline; }", key="custom_css", height=100)
     
     st.markdown("---")
     if word_file and st.button("Gerar Código JSON", type="primary", use_container_width=True):
@@ -175,7 +205,6 @@ with col2:
             buffer_texto = [] 
             
             for element in soup.find_all(recursive=False):
-                # Mantemos o "texto_puro" apenas para avaliar se é um marcador de formatação
                 texto_puro = element.get_text(strip=True)
                 if not texto_puro: continue
                 
@@ -186,7 +215,8 @@ with col2:
                         widgets_gerados.append(criar_widget_texto(
                             "".join(buffer_texto), 
                             estilos_configurados['TEXT']['cor'], 
-                            estilos_configurados['TEXT']['fonte'], 
+                            estilos_configurados['TEXT']['fonte'],
+                            link_cor, link_hover,
                             st.session_state.dicionario
                         ))
                         buffer_texto = []
@@ -194,32 +224,42 @@ with col2:
                     continue
                 
                 if modo_atual.startswith('H'):
-                    # AQUI ESTÁ A MÁGICA: decode_contents() extrai todo o HTML interno (inclui <strong> e <a>)
                     html_interno = element.decode_contents()
                     widgets_gerados.append(criar_widget_titulo(
                         html_interno, modo_atual, 
                         estilos_configurados[modo_atual]['cor'], 
-                        estilos_configurados[modo_atual]['fonte'], 
+                        estilos_configurados[modo_atual]['fonte'],
+                        link_cor, link_hover,
                         st.session_state.dicionario
                     ))
                 elif modo_atual == 'TEXT':
-                    # Transforma o elemento inteiro numa String HTML preservando parágrafos, listas e formatações
                     buffer_texto.append(str(element))
             
             if buffer_texto and modo_atual == 'TEXT':
                 widgets_gerados.append(criar_widget_texto(
                     "".join(buffer_texto), 
                     estilos_configurados['TEXT']['cor'], 
-                    estilos_configurados['TEXT']['fonte'], 
+                    estilos_configurados['TEXT']['fonte'],
+                    link_cor, link_hover,
                     st.session_state.dicionario
                 ))
+            
+            # Configurações do Contentor Principal
+            container_settings = {
+                "content_width": "full",
+                "padding": { "unit": "px", "top": "40", "right": "20", "bottom": "40", "left": "20", "isLinked": False }
+            }
+            
+            # Injeta o Custom CSS se o utilizador tiver preenchido
+            if custom_css.strip():
+                container_settings["custom_css"] = custom_css.strip()
                     
             template_final = {
                 "version": "0.4", "title": "Página Dinâmica", "type": "page",
                 "content": [
                     {
                         "id": gerar_id(), "elType": "container",
-                        "settings": { "content_width": "full" },
+                        "settings": container_settings,
                         "elements": widgets_gerados, "isInner": False
                     }
                 ],
@@ -228,5 +268,5 @@ with col2:
             
             json_string = json.dumps(template_final, indent=2)
             
-            st.success("🎉 Sucesso! A sua página está pronta com todas as formatações preservadas.")
+            st.success("🎉 Sucesso! A sua página está pronta.")
             st.download_button("⬇️ Transferir ficheiro .json", data=json_string, file_name="pagina-gerada.json", mime="application/json", use_container_width=True)
