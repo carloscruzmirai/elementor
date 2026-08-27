@@ -222,25 +222,35 @@ with col2:
             else:
                 link_hover = st.text_input("Cor do Hover", placeholder="Nome da Cor", key="link_cor_hover")
 
-    # NOVO CARTÃO: Configuração de Layout / Margens
+    # CARTÃO: Configuração de Layout / Margens com Suporte a Custom (CSS Vars)
     with st.container(border=True):
         st.subheader("Layout Settings", anchor=False)
         
         st.markdown("**Padding (Espaço Interior do Container)**")
         col_p_unit, col_p_t, col_p_r, col_p_b, col_p_l = st.columns(5)
-        p_unit = col_p_unit.selectbox("Unidade", ["px", "%", "em", "rem"], key="p_unit")
-        p_top = col_p_t.text_input("Topo", value="40", key="p_top")
-        p_right = col_p_r.text_input("Direita", value="20", key="p_right")
-        p_bottom = col_p_b.text_input("Fundo", value="40", key="p_bottom")
-        p_left = col_p_l.text_input("Esquerda", value="20", key="p_left")
+        # Adicionada a opção 'custom' para variáveis CSS
+        p_unit = col_p_unit.selectbox("Unidade", ["px", "%", "em", "rem", "custom"], key="p_unit")
+        
+        # Sugestão predefinida consoante a unidade escolhida
+        def_p_top = "var(--mft-space-xl)" if p_unit == "custom" else "40"
+        def_p_side = "var(--mft-space-m)" if p_unit == "custom" else "20"
+        
+        p_top = col_p_t.text_input("Topo", value=def_p_top, key="p_top")
+        p_right = col_p_r.text_input("Direita", value=def_p_side, key="p_right")
+        p_bottom = col_p_b.text_input("Fundo", value=def_p_top, key="p_bottom")
+        p_left = col_p_l.text_input("Esquerda", value=def_p_side, key="p_left")
         
         st.markdown("**Margin (Espaço Exterior do Container)**")
         col_m_unit, col_m_t, col_m_r, col_m_b, col_m_l = st.columns(5)
-        m_unit = col_m_unit.selectbox("Unidade", ["px", "%", "em", "rem"], key="m_unit")
-        m_top = col_m_t.text_input("Topo", value="0", key="m_top")
-        m_right = col_m_r.text_input("Direita", value="0", key="m_right")
-        m_bottom = col_m_b.text_input("Fundo", value="0", key="m_bottom")
-        m_left = col_m_l.text_input("Esquerda", value="0", key="m_left")
+        # Adicionada a opção 'custom' para variáveis CSS
+        m_unit = col_m_unit.selectbox("Unidade", ["px", "%", "em", "rem", "custom"], key="m_unit")
+        
+        def_m_val = "var(--mft-space-l)" if m_unit == "custom" else "0"
+        
+        m_top = col_m_t.text_input("Topo", value=def_m_val, key="m_top")
+        m_right = col_m_r.text_input("Direita", value=def_m_val, key="m_right")
+        m_bottom = col_m_b.text_input("Fundo", value=def_m_val, key="m_bottom")
+        m_left = col_m_l.text_input("Esquerda", value=def_m_val, key="m_left")
 
     if word_file and st.button("Generate JSON", type="primary", use_container_width=True):
         with st.spinner("Processing design elements..."):
@@ -297,7 +307,7 @@ with col2:
                     estilos_configurados['TEXT']['fonte'], link_cor, link_hover, st.session_state.dicionario
                 ))
             
-            # Montar as definições do container com base no que foi introduzido
+            # Estrutura tratada para suportar unidades customizadas (var(--...))
             container_settings = {
                 "content_width": "full",
                 "padding": {
