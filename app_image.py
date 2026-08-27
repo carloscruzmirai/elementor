@@ -154,22 +154,26 @@ with col1:
             cores = list(st.session_state.dicionario['cores'].keys())
             fontes = list(st.session_state.dicionario['fontes'].keys())
             
-            # Divide os estilos detetados em 2 colunas
-            col_estilos_1, col_estilos_2 = st.columns(2)
-            
-            with col_estilos_1:
-                st.markdown("**Cores Extraídas**")
-                if cores:
-                    st.code(", ".join(cores), language=None)
-                else:
-                    st.caption("Nenhuma cor encontrada.")
-                    
-            with col_estilos_2:
-                st.markdown("**Tipografia Extraída**")
-                if fontes:
-                    st.code(", ".join(fontes), language=None)
-                else:
-                    st.caption("Nenhuma fonte encontrada.")
+            # Adicionado o Accordion (Expander) para poupar espaço
+            with st.expander("Ver lista de estilos extraídos", expanded=True):
+                # Divide os estilos detetados em 2 colunas dentro do accordion
+                col_estilos_1, col_estilos_2 = st.columns(2)
+                
+                with col_estilos_1:
+                    st.markdown("**Cores**")
+                    if cores:
+                        # O \n força a quebra de linha (Vertical)
+                        st.code("\n".join(cores), language=None)
+                    else:
+                        st.caption("Nenhuma cor encontrada.")
+                        
+                with col_estilos_2:
+                    st.markdown("**Tipografia**")
+                    if fontes:
+                        # O \n força a quebra de linha (Vertical)
+                        st.code("\n".join(fontes), language=None)
+                    else:
+                        st.caption("Nenhuma fonte encontrada.")
 
 with col2:
     with st.container(border=True):
