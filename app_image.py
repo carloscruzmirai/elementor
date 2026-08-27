@@ -31,31 +31,29 @@ st.markdown("""
             color: #3B82F6 !important;
         }
         
-        /* Estilo dos Cartões */
+        /* Estilo dos Cartões (Fundo branco para contraste) */
         div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column"] {
             background-color: #FFFFFF !important;
             border-color: #E5E7EB !important;
             border-radius: 0.75rem !important;
         }
 
-        /* 🔵 TRUQUE INFALÍVEL PARA AS CAIXAS AZUIS 🔵 */
-        .blue-code-box pre {
-            background-color: #3B82F6 !important;
-            border: none !important;
+        /* 🟦 BORDA TRACEJADA NOS UPLOADS 🟦 */
+        [data-testid="stFileUploaderDropzone"] {
+            border: 1px dashed #3B82F6 !important;
+            background-color: transparent !important;
             border-radius: 0.5rem !important;
         }
-        .blue-code-box code {
-            color: #FFFFFF !important;
+
+        /* 🟦 BORDA SÓLIDA NAS CAIXAS DE ESTILOS (st.code) 🟦 */
+        div[data-testid="stCodeBlock"] {
+            border: 1px solid #3B82F6 !important;
+            border-radius: 0.5rem !important;
             background-color: transparent !important;
+        }
+        div[data-testid="stCodeBlock"] code {
+            color: #2E3132 !important; /* Mantém o texto escuro para se ler bem */
             font-family: 'Geist', sans-serif !important;
-        }
-        .blue-code-box button {
-            color: #FFFFFF !important;
-            background-color: transparent !important;
-        }
-        .blue-code-box svg {
-            fill: #FFFFFF !important;
-            stroke: #FFFFFF !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -156,27 +154,22 @@ with col1:
             cores = list(st.session_state.dicionario['cores'].keys())
             fontes = list(st.session_state.dicionario['fontes'].keys())
             
-            # Abrimos a nossa "Capa" HTML
-            st.markdown('<div class="blue-code-box">', unsafe_allow_html=True)
+            # Divide os estilos detetados em 2 colunas
+            col_estilos_1, col_estilos_2 = st.columns(2)
             
-            st.markdown("**Cores Extraídas**")
-            if cores:
-                c_cols = st.columns(2)
-                for i, c in enumerate(cores): 
-                    c_cols[i % 2].code(c, language=None)
-            else:
-                st.caption("Nenhuma cor encontrada.")
-                
-            st.markdown("**Tipografia Extraída**")
-            if fontes:
-                f_cols = st.columns(2)
-                for i, f in enumerate(fontes): 
-                    f_cols[i % 2].code(f, language=None)
-            else:
-                st.caption("Nenhuma fonte encontrada.")
-                
-            # Fechamos a nossa "Capa" HTML
-            st.markdown('</div>', unsafe_allow_html=True)
+            with col_estilos_1:
+                st.markdown("**Cores Extraídas**")
+                if cores:
+                    st.code(", ".join(cores), language=None)
+                else:
+                    st.caption("Nenhuma cor encontrada.")
+                    
+            with col_estilos_2:
+                st.markdown("**Tipografia Extraída**")
+                if fontes:
+                    st.code(", ".join(fontes), language=None)
+                else:
+                    st.caption("Nenhuma fonte encontrada.")
 
 with col2:
     with st.container(border=True):
