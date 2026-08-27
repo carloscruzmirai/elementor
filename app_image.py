@@ -37,6 +37,24 @@ st.markdown("""
             border-color: #E5E7EB !important;
             border-radius: 0.75rem !important;
         }
+
+        /* 🔵 ESTILOS PARA AS CAIXAS DE ESTILOS DETETADOS 🔵 */
+        [data-testid="stCodeBlock"] {
+            background-color: #3B82F6 !important; /* Fundo Azul */
+            border-radius: 0.5rem !important;
+            border: none !important;
+        }
+        [data-testid="stCodeBlock"] code, [data-testid="stCodeBlock"] pre {
+            color: #FFFFFF !important; /* Texto Branco */
+            font-family: 'Geist', sans-serif !important; /* Fonte alinhada com o resto */
+        }
+        /* Mudar a cor do ícone de copiar e do hover para branco */
+        [data-testid="stCodeBlock"] button {
+            color: #FFFFFF !important;
+        }
+        [data-testid="stCodeBlock"] button:hover {
+            background-color: rgba(255, 255, 255, 0.2) !important;
+        }
     </style>
 """, unsafe_allow_html=True)
 
