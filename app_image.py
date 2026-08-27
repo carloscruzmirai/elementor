@@ -6,9 +6,26 @@ import re
 from bs4 import BeautifulSoup
 
 # ==========================================
-# CONFIGURAÇÃO DA PÁGINA
+# CONFIGURAÇÃO DA PÁGINA E DESIGN (FONTES)
 # ==========================================
 st.set_page_config(page_title="Elementor Generator", layout="wide")
+
+# Importar Ubuntu e Geist do Google Fonts e aplicar
+st.markdown("""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Ubuntu:wght@400;500;700&display=swap');
+
+        /* Fonte base para todos os textos (Geist) */
+        html, body, [class*="css"] {
+            font-family: 'Geist', sans-serif !important;
+        }
+
+        /* Fonte específica para todos os Títulos (Ubuntu) */
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Ubuntu', sans-serif !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 # ==========================================
 # FUNÇÕES DE LÓGICA
@@ -77,18 +94,15 @@ def identificar_marcador(texto):
 # ==========================================
 # INTERFACE STREAMLIT
 # ==========================================
-# anchor=False remove o ícone de link ao passar o rato
 st.title("Elementor Generator", anchor=False)
 st.markdown("Faça o upload do seu ficheiro de design e mapeie os estilos para gerar o JSON estruturado.")
 
 if 'dicionario' not in st.session_state:
     st.session_state.dicionario = {"cores": {}, "fontes": {}}
 
-# Criamos duas colunas principais
 col1, col2 = st.columns([1, 1.5], gap="large")
 
 with col1:
-    # 1º CARTÃO: Uploads
     with st.container(border=True):
         st.subheader("Drag & Drop Files", anchor=False)
         settings_file = st.file_uploader("1. Configurações do Site (.json)", type=['json'])
@@ -103,7 +117,6 @@ with col1:
             except Exception:
                 st.error("Erro ao ler o ficheiro JSON.")
 
-    # 2º CARTÃO: Detetados
     if settings_file:
         with st.container(border=True):
             st.subheader("Detected Styles", anchor=False)
@@ -123,7 +136,6 @@ with col1:
                 st.caption("Nenhuma fonte encontrada.")
 
 with col2:
-    # 3º CARTÃO: Mapeamento de Estilos
     with st.container(border=True):
         st.subheader("Style Mapping", anchor=False)
         
@@ -131,7 +143,6 @@ with col2:
         lista_fontes = [""] + list(st.session_state.dicionario['fontes'].keys())
         tem_estilos = len(lista_cores) > 1 or len(lista_fontes) > 1
         
-        # Cabeçalho da Tabela
         cab1, cab2, cab3 = st.columns([0.5, 1.5, 1.5])
         cab1.markdown("**TAG**")
         cab2.markdown("**Cor**")
@@ -174,7 +185,6 @@ with col2:
             else:
                 link_hover = st.text_input("Cor do Hover", placeholder="Nome da Cor", key="link_cor_hover")
 
-    # BOTÃO E AÇÃO
     if word_file and st.button("Generate JSON", type="primary", use_container_width=True):
         with st.spinner("Processing design elements..."):
             result = mammoth.convert_to_html(word_file)
