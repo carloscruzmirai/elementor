@@ -8,10 +8,10 @@ from bs4 import BeautifulSoup
 # ==========================================
 # CONFIGURAÇÃO DA PÁGINA
 # ==========================================
-st.set_page_config(page_title="Elementor Generator", page_icon="⚙️", layout="wide")
+st.set_page_config(page_title="Elementor Generator", layout="wide")
 
 # ==========================================
-# FUNÇÕES DE LÓGICA (Mantidas 100% Intactas)
+# FUNÇÕES DE LÓGICA
 # ==========================================
 def gerar_id(): return ''.join(random.choices('0123456789abcdef', k=7))
 
@@ -75,9 +75,10 @@ def identificar_marcador(texto):
     return 'H1' if match and match.group(1) == 'TITLE' else (match.group(1) if match else None)
 
 # ==========================================
-# INTERFACE STREAMLIT (Visual Melhorado e Nativo)
+# INTERFACE STREAMLIT
 # ==========================================
-st.title("Elementor Generator 📄 -> ⚙️")
+# anchor=False remove o ícone de link ao passar o rato
+st.title("Elementor Generator", anchor=False)
 st.markdown("Faça o upload do seu ficheiro de design e mapeie os estilos para gerar o JSON estruturado.")
 
 if 'dicionario' not in st.session_state:
@@ -89,7 +90,7 @@ col1, col2 = st.columns([1, 1.5], gap="large")
 with col1:
     # 1º CARTÃO: Uploads
     with st.container(border=True):
-        st.markdown("#### ☁️ Drag & Drop Files")
+        st.subheader("Drag & Drop Files", anchor=False)
         settings_file = st.file_uploader("1. Configurações do Site (.json)", type=['json'])
         word_file = st.file_uploader("2. Documento de Texto (.docx)", type=['docx'])
         
@@ -105,7 +106,7 @@ with col1:
     # 2º CARTÃO: Detetados
     if settings_file:
         with st.container(border=True):
-            st.markdown("#### 🎨 Detected Styles")
+            st.subheader("Detected Styles", anchor=False)
             cores = list(st.session_state.dicionario['cores'].keys())
             fontes = list(st.session_state.dicionario['fontes'].keys())
             
@@ -124,7 +125,7 @@ with col1:
 with col2:
     # 3º CARTÃO: Mapeamento de Estilos
     with st.container(border=True):
-        st.markdown("#### ⚡ Style Mapping")
+        st.subheader("Style Mapping", anchor=False)
         
         lista_cores = [""] + list(st.session_state.dicionario['cores'].keys())
         lista_fontes = [""] + list(st.session_state.dicionario['fontes'].keys())
@@ -133,8 +134,8 @@ with col2:
         # Cabeçalho da Tabela
         cab1, cab2, cab3 = st.columns([0.5, 1.5, 1.5])
         cab1.markdown("**TAG**")
-        cab2.markdown("**🎨 Cor (Dropdown)**")
-        cab3.markdown("**✍️ Fonte (Dropdown)**")
+        cab2.markdown("**Cor**")
+        cab3.markdown("**Fonte**")
         
         estilos_configurados = {}
         elementos = ["H1", "H2", "H3", "H4", "H5", "H6", "TEXT"]
@@ -174,7 +175,7 @@ with col2:
                 link_hover = st.text_input("Cor do Hover", placeholder="Nome da Cor", key="link_cor_hover")
 
     # BOTÃO E AÇÃO
-    if word_file and st.button("🚀 Generate JSON", type="primary", use_container_width=True):
+    if word_file and st.button("Generate JSON", type="primary", use_container_width=True):
         with st.spinner("Processing design elements..."):
             result = mammoth.convert_to_html(word_file)
             soup = BeautifulSoup(result.value, 'html.parser')
@@ -241,5 +242,5 @@ with col2:
             
             json_string = json.dumps(template_final, indent=2)
             
-            st.success("🎉 Produção Concluída!")
-            st.download_button("⬇️ Download Elementor JSON", data=json_string, file_name="elementor-gen.json", mime="application/json", use_container_width=True)
+            st.success("Produção Concluída!")
+            st.download_button("Download Elementor JSON", data=json_string, file_name="elementor-gen.json", mime="application/json", use_container_width=True)
