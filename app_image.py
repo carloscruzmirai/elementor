@@ -38,21 +38,31 @@ st.markdown("""
             border-radius: 0.75rem !important;
         }
 
-        /* 🔵 ESTILOS PARA AS CAIXAS DE ESTILOS DETETADOS 🔵 */
-        [data-testid="stCodeBlock"] {
-            background-color: #3B82F6 !important; /* Fundo Azul */
-            border-radius: 0.5rem !important;
+        /* 🔵 CSS AGRESSIVO PARA AS CAIXAS ST.CODE 🔵 */
+        /* Pinta o contentor principal e todas as sub-caixas de azul */
+        div[data-testid="stCodeBlock"], 
+        div[data-testid="stCodeBlock"] > div,
+        div[data-testid="stCodeBlock"] pre, 
+        div[data-testid="stCodeBlock"] code {
+            background-color: #3B82F6 !important;
+            color: #FFFFFF !important;
             border: none !important;
         }
-        [data-testid="stCodeBlock"] code, [data-testid="stCodeBlock"] pre {
-            color: #FFFFFF !important; /* Texto Branco */
-            font-family: 'Geist', sans-serif !important; /* Fonte alinhada com o resto */
+        
+        /* Remove o fundo cinza nativo que o Streamlit tenta forçar */
+        div[data-testid="stCodeBlock"] pre {
+            background: #3B82F6 !important;
         }
-        /* Mudar a cor do ícone de copiar e do hover para branco */
-        [data-testid="stCodeBlock"] button {
+
+        /* Força a cor do botão de copiar e do ícone para branco */
+        div[data-testid="stCodeBlock"] button,
+        div[data-testid="stCodeBlock"] button svg {
             color: #FFFFFF !important;
+            fill: #FFFFFF !important;
+            stroke: #FFFFFF !important;
         }
-        [data-testid="stCodeBlock"] button:hover {
+        
+        div[data-testid="stCodeBlock"] button:hover {
             background-color: rgba(255, 255, 255, 0.2) !important;
         }
     </style>
