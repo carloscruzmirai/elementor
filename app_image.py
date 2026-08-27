@@ -31,39 +31,31 @@ st.markdown("""
             color: #3B82F6 !important;
         }
         
-        /* Estilo dos Cartões (Fundo branco para contraste) */
+        /* Estilo dos Cartões */
         div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column"] {
             background-color: #FFFFFF !important;
             border-color: #E5E7EB !important;
             border-radius: 0.75rem !important;
         }
 
-        /* 🔵 CSS AGRESSIVO PARA AS CAIXAS ST.CODE 🔵 */
-        /* Pinta o contentor principal e todas as sub-caixas de azul */
-        div[data-testid="stCodeBlock"], 
-        div[data-testid="stCodeBlock"] > div,
-        div[data-testid="stCodeBlock"] pre, 
-        div[data-testid="stCodeBlock"] code {
+        /* 🔵 TRUQUE INFALÍVEL PARA AS CAIXAS AZUIS 🔵 */
+        .blue-code-box pre {
             background-color: #3B82F6 !important;
-            color: #FFFFFF !important;
             border: none !important;
+            border-radius: 0.5rem !important;
         }
-        
-        /* Remove o fundo cinza nativo que o Streamlit tenta forçar */
-        div[data-testid="stCodeBlock"] pre {
-            background: #3B82F6 !important;
-        }
-
-        /* Força a cor do botão de copiar e do ícone para branco */
-        div[data-testid="stCodeBlock"] button,
-        div[data-testid="stCodeBlock"] button svg {
+        .blue-code-box code {
             color: #FFFFFF !important;
+            background-color: transparent !important;
+            font-family: 'Geist', sans-serif !important;
+        }
+        .blue-code-box button {
+            color: #FFFFFF !important;
+            background-color: transparent !important;
+        }
+        .blue-code-box svg {
             fill: #FFFFFF !important;
             stroke: #FFFFFF !important;
-        }
-        
-        div[data-testid="stCodeBlock"] button:hover {
-            background-color: rgba(255, 255, 255, 0.2) !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -164,6 +156,9 @@ with col1:
             cores = list(st.session_state.dicionario['cores'].keys())
             fontes = list(st.session_state.dicionario['fontes'].keys())
             
+            # Abrimos a nossa "Capa" HTML
+            st.markdown('<div class="blue-code-box">', unsafe_allow_html=True)
+            
             st.markdown("**Cores Extraídas**")
             if cores:
                 c_cols = st.columns(2)
@@ -179,6 +174,9 @@ with col1:
                     f_cols[i % 2].code(f, language=None)
             else:
                 st.caption("Nenhuma fonte encontrada.")
+                
+            # Fechamos a nossa "Capa" HTML
+            st.markdown('</div>', unsafe_allow_html=True)
 
 with col2:
     with st.container(border=True):
