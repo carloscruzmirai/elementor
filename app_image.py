@@ -138,13 +138,17 @@ with col1:
             
             st.markdown("**Cores Extraídas**")
             if cores:
-                st.caption(", ".join(cores))
+                c_cols = st.columns(2)
+                for i, c in enumerate(cores): 
+                    c_cols[i % 2].code(c, language=None)
             else:
                 st.caption("Nenhuma cor encontrada.")
                 
             st.markdown("**Tipografia Extraída**")
             if fontes:
-                st.caption(", ".join(fontes))
+                f_cols = st.columns(2)
+                for i, f in enumerate(fontes): 
+                    f_cols[i % 2].code(f, language=None)
             else:
                 st.caption("Nenhuma fonte encontrada.")
 
