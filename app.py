@@ -6,19 +6,16 @@ import re
 from bs4 import BeautifulSoup
 
 # ==========================================
-# CONFIGURAÇÃO DA PÁGINA & CSS (Para diminuir textos)
+# CONFIGURAÇÃO DA PÁGINA & CSS
 # ==========================================
 st.set_page_config(page_title="Gerador Elementor", page_icon="⚙️", layout="wide")
 
 st.markdown("""
     <style>
-        /* Diminui o tamanho dos títulos e textos nativos do Streamlit */
         h1 { font-size: 1.8rem !important; padding-bottom: 0.5rem !important; }
         h3 { font-size: 1.3rem !important; margin-bottom: 0 !important; }
         h4 { font-size: 1.1rem !important; }
         p, div, span, label { font-size: 0.9rem !important; }
-        
-        /* Compacta os espaços entre as caixas na grelha de estilos */
         div[data-testid="stHorizontalBlock"] { gap: 0.5rem !important; align-items: center; }
         div[data-testid="stForm"] { padding: 1rem; }
     </style>
@@ -60,8 +57,9 @@ def obter_id_estilo(tipo, nome_escrito, dicionario):
     prefixo = 'globals/colors?id=' if tipo == 'cores' else 'globals/typography?id='
     return id_encontrado if prefixo in id_encontrado else prefixo + id_encontrado
 
-def criar_widget_titulo(texto, tag_html, cor_nome, fonte_nome, dicionario):
-    settings = {"title": texto, "header_size": tag_html.lower()}
+def criar_widget_titulo(texto_html, tag_html, cor_nome, fonte_nome, dicionario):
+    # texto_html agora recebe o interior exato do Word, mantendo <strong> e <a>
+    settings = {"title": texto_html, "header_size": tag_html.lower()}
     cor_final = obter_id_estilo('cores', cor_nome, dicionario)
     fonte_final = obter_id_estilo('fontes', fonte_nome, dicionario)
     
@@ -96,7 +94,7 @@ def identificar_marcador(texto):
 # INTERFACE STREAMLIT
 # ==========================================
 st.title("Gerador Automático Elementor 📄 -> ⚙️")
-st.markdown("Transforme ficheiros Word em páginas estruturadas. Textos mais pequenos e layout otimizado.")
+st.markdown("Transforme ficheiros Word em páginas estruturadas. Mantém links e negritos nativos.")
 
 if 'dicionario' not in st.session_state:
     st.session_state.dicionario = {"cores": {}, "fontes": {}}
@@ -140,7 +138,6 @@ with col2:
     
     st.markdown("#### Configuração de Estilos Individuais")
     
-    # Cabeçalhos da Tabela
     cab1, cab2, cab3 = st.columns([0.5, 1.5, 1.5])
     cab1.markdown("**TAG**")
     cab2.markdown("**🎨 Cor (Dropdown ou Texto)**")
@@ -149,7 +146,6 @@ with col2:
     estilos_configurados = {}
     elementos = ["H1", "H2", "H3", "H4", "H5", "H6", "TEXT"]
     
-    # Gerador da Grelha Compacta para cada Tag
     for el in elementos:
         col_tag, col_cor, col_fonte = st.columns([0.5, 1.5, 1.5])
         col_tag.markdown(f"<div style='margin-top:10px;'><b>{el}</b></div>", unsafe_allow_html=True)
@@ -179,6 +175,7 @@ with col2:
             buffer_texto = [] 
             
             for element in soup.find_all(recursive=False):
+                # Mantemos o "texto_puro" apenas para avaliar se é um marcador de formatação
                 texto_puro = element.get_text(strip=True)
                 if not texto_puro: continue
                 
@@ -197,13 +194,16 @@ with col2:
                     continue
                 
                 if modo_atual.startswith('H'):
+                    # AQUI ESTÁ A MÁGICA: decode_contents() extrai todo o HTML interno (inclui <strong> e <a>)
+                    html_interno = element.decode_contents()
                     widgets_gerados.append(criar_widget_titulo(
-                        texto_puro, modo_atual, 
+                        html_interno, modo_atual, 
                         estilos_configurados[modo_atual]['cor'], 
                         estilos_configurados[modo_atual]['fonte'], 
                         st.session_state.dicionario
                     ))
                 elif modo_atual == 'TEXT':
+                    # Transforma o elemento inteiro numa String HTML preservando parágrafos, listas e formatações
                     buffer_texto.append(str(element))
             
             if buffer_texto and modo_atual == 'TEXT':
@@ -228,5 +228,5 @@ with col2:
             
             json_string = json.dumps(template_final, indent=2)
             
-            st.success("🎉 Sucesso! A sua página está pronta.")
+            st.success("🎉 Sucesso! A sua página está pronta com todas as formatações preservadas.")
             st.download_button("⬇️ Transferir ficheiro .json", data=json_string, file_name="pagina-gerada.json", mime="application/json", use_container_width=True)
