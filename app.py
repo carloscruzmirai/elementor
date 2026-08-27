@@ -57,9 +57,13 @@ def obter_id_estilo(tipo, nome_escrito, dicionario):
     prefixo = 'globals/colors?id=' if tipo == 'cores' else 'globals/typography?id='
     return id_encontrado if prefixo in id_encontrado else prefixo + id_encontrado
 
-def criar_widget_titulo(texto_html, tag_html, cor_nome, fonte_nome, cor_link, cor_hover, dicionario):
+def criar_widget_titulo(texto_html, tag_html, cor_nome, fonte_nome, cor_link, cor_hover, dicionario, css_id=None):
     settings = {"title": texto_html, "header_size": tag_html.lower()}
     
+    # Se passarmos uma âncora, adiciona-a às configurações
+    if css_id:
+        settings["_css_id"] = css_id
+        
     cor_f = obter_id_estilo('cores', cor_nome, dicionario)
     fonte_f = obter_id_estilo('fontes', fonte_nome, dicionario)
     link_f = obter_id_estilo('cores', cor_link, dicionario)
@@ -222,12 +226,36 @@ with col2:
                 
                 if modo_atual.startswith('H'):
                     html_interno = element.decode_contents()
+                    
+                    # 💡 AQUI ESTÁ A LÓGICA DA ÂNCORA (ID) MULTILÍNGUE
+                    texto_minusculo = texto_puro.lower()
+                    id_ancora = None
+                    
+                    # Lista de termos a detetar em várias línguas
+                    termos_ral = [
+                        "resolução alternativa de litígios", # PT
+                        "litígios de consumo",               # PT (alternativo)
+                        "alternative dispute resolution",    # EN
+                        "consumer dispute",                  # EN (alternativo)
+                        "resolución alternativa",            # ES
+                        "litigios de consumo",               # ES (alternativo)
+                        "règlement extrajudiciaire",         # FR
+                        "litiges de consommation",           # FR (alternativo)
+                        "alternative streitbeilegung",       # DE
+                        "verbraucherstreitbeilegung"         # DE (alternativo)
+                    ]
+                    
+                    # Se algum dos termos existir no título, aplica o ID "ral"
+                    if any(termo in texto_minusculo for termo in termos_ral):
+                        id_ancora = "ral"
+                    
                     widgets_gerados.append(criar_widget_titulo(
                         html_interno, modo_atual, 
                         estilos_configurados[modo_atual]['cor'], 
                         estilos_configurados[modo_atual]['fonte'],
                         link_cor, link_hover,
-                        st.session_state.dicionario
+                        st.session_state.dicionario,
+                        id_ancora
                     ))
                 elif modo_atual == 'TEXT':
                     buffer_texto.append(str(element))
