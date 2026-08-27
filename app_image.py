@@ -6,23 +6,36 @@ import re
 from bs4 import BeautifulSoup
 
 # ==========================================
-# CONFIGURAÇÃO DA PÁGINA E DESIGN (FONTES)
+# CONFIGURAÇÃO DA PÁGINA E DESIGN
 # ==========================================
 st.set_page_config(page_title="Elementor Generator", layout="wide")
 
-# Importar Ubuntu e Geist do Google Fonts e aplicar
 st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Ubuntu:wght@400;500;700&display=swap');
 
-        /* Fonte base para todos os textos (Geist) */
+        /* Fonte base e Cor do Texto Escuro */
         html, body, [class*="css"] {
             font-family: 'Geist', sans-serif !important;
+            color: #2E3132 !important;
         }
 
-        /* Fonte específica para todos os Títulos (Ubuntu) */
+        /* Cor de fundo da App */
+        .stApp {
+            background-color: #F9FAFB !important;
+        }
+
+        /* Títulos em Azul e Fonte Ubuntu */
         h1, h2, h3, h4, h5, h6 {
             font-family: 'Ubuntu', sans-serif !important;
+            color: #3B82F6 !important;
+        }
+        
+        /* Estilo dos Cartões (Fundo branco para contraste) */
+        div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column"] {
+            background-color: #FFFFFF !important;
+            border-color: #E5E7EB !important;
+            border-radius: 0.75rem !important;
         }
     </style>
 """, unsafe_allow_html=True)
