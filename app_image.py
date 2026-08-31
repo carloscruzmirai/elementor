@@ -222,16 +222,14 @@ with col2:
             else:
                 link_hover = st.text_input("Cor do Hover", placeholder="Nome da Cor", key="link_cor_hover")
 
-    # CARTÃO: Configuração de Layout / Margens com Suporte a Custom (CSS Vars)
+    # CARTÃO: Configuração de Layout / Margens
     with st.container(border=True):
         st.subheader("Layout Settings", anchor=False)
         
         st.markdown("**Padding (Espaço Interior do Container)**")
         col_p_unit, col_p_t, col_p_r, col_p_b, col_p_l = st.columns(5)
-        # Adicionada a opção 'custom' para variáveis CSS
         p_unit = col_p_unit.selectbox("Unidade", ["px", "%", "em", "rem", "custom"], key="p_unit")
         
-        # Sugestão predefinida consoante a unidade escolhida
         def_p_top = "var(--mft-space-xl)" if p_unit == "custom" else "40"
         def_p_side = "var(--mft-space-m)" if p_unit == "custom" else "20"
         
@@ -242,7 +240,6 @@ with col2:
         
         st.markdown("**Margin (Espaço Exterior do Container)**")
         col_m_unit, col_m_t, col_m_r, col_m_b, col_m_l = st.columns(5)
-        # Adicionada a opção 'custom' para variáveis CSS
         m_unit = col_m_unit.selectbox("Unidade", ["px", "%", "em", "rem", "custom"], key="m_unit")
         
         def_m_val = "var(--mft-space-l)" if m_unit == "custom" else "0"
@@ -264,6 +261,15 @@ with col2:
             for element in soup.find_all(recursive=False):
                 texto_puro = element.get_text(strip=True)
                 if not texto_puro: continue
+                
+                # 🚫 FILTRO DE META-TAGS E IDIOMAS (Ignora linhas de idioma/secção)
+                texto_upp = texto_puro.upper()
+                if (texto_upp.startswith('----LANGUAGE') or 
+                    texto_upp.startswith('LANG:') or 
+                    'SECCIÓN:' in texto_upp or 
+                    'SECCAO:' in texto_upp or 
+                    'SECTION:' in texto_upp):
+                    continue  # Pula esta linha e não a inclui no JSON
                 
                 marcador = identificar_marcador(texto_puro)
                 
@@ -307,7 +313,6 @@ with col2:
                     estilos_configurados['TEXT']['fonte'], link_cor, link_hover, st.session_state.dicionario
                 ))
             
-            # Estrutura tratada para suportar unidades customizadas (var(--...))
             container_settings = {
                 "content_width": "full",
                 "padding": {
